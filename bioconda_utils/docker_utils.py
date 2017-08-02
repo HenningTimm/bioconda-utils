@@ -401,7 +401,8 @@ class RecipeBuilder(object):
 
         # Check if the installed version of docker supports the --network flag (requires version >= 1.13.0)
         # Parse output of `docker --version` since the format of
-        #  `docker version` is not consistent between different docker versions
+        #  `docker version` is not consistent between different docker versions.
+        # The --version string is the same for docker 1.6.2 and 1.12.6
         s = sp.check_output(["docker", "--version"])
         p = re.compile("\d+\.\d+\.\d+")  # three groups of at least on digit separated by dots
         version_string = re.search(p, s).group(0)
