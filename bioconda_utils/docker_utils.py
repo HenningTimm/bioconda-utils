@@ -405,13 +405,12 @@ class RecipeBuilder(object):
         #  `docker version` command (note the missing dashes) is not consistent
         # between different docker versions. The --version string is the same
         # for docker 1.6.2 and 1.12.6
-        s = sp.check_output(["docker", "--version"])
+        s = sp.check_output(["docker", "--version"]).decode()
         p = re.compile("\d+\.\d+\.\d+")  # three groups of at least on digit separated by dots
         version_string = re.search(p, s).group(0)
         if LooseVersion(version_string) >= LooseVersion("1.13.0"):
             cmd = [
                     'docker', 'build',
-
                     # xref #5027
                     '--network', 'host',
                     '-t', self.tag,
@@ -421,7 +420,6 @@ class RecipeBuilder(object):
             # Network flag was added in 1.13.0, do not add it for lower versions. xref #5387
             cmd = [
                     'docker', 'build',
-
                     '-t', self.tag,
                     build_dir
             ]
