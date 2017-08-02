@@ -52,6 +52,8 @@ import pwd
 import grp
 from textwrap import dedent
 import pkg_resources
+import re
+from distutils.version import LooseVersion
 
 from . import utils
 
@@ -397,14 +399,30 @@ class RecipeBuilder(object):
 
         logger.debug('Dockerfile:\n' + open(fout.name).read())
 
-        cmd = [
-            'docker', 'build',
+        # Check if the installed version of docker supports the --network flag (requires version >= 1.13.0)
+        # Parse output of `docker --version` since the format of
+        #  `docker version` is not consistent between different docker versions
+        s = sp.check_output(["docker", "--version"])
+        p = re.compile("\d+\.\d+\.\d+")  # three groups of at least on digit separated by dots
+        version_string = re.search(p, s).group(0)
+        if LooseVersion(version_string) >= LooseVersion("1.13.0"):
+            cmd = [
+                    'docker', 'build',
 
-            # xref #5027
-            '--network', 'host',
-            '-t', self.tag,
-            build_dir
-        ]
+                    # xref #5027
+                    '--network', 'host',
+                    '-t', self.tag,
+                    build_dir
+            ]
+        else:
+            # Network flag was added in 1.13.0, do not add it for lower versions. xref #5387
+            cmd = [
+                    'docker', 'build',
+
+                    '-t', self.tag,
+                    build_dir
+            ]
+
         try:
             with utils.Progress():
                 p = utils.run(cmd)
